@@ -14,6 +14,10 @@ final class PasteboardController {
         self.lastChangeCount = pasteboard.changeCount
     }
 
+    var changeCount: Int {
+        pasteboard.changeCount
+    }
+
     var hasUnobservedChange: Bool {
         pasteboard.changeCount != lastChangeCount
     }

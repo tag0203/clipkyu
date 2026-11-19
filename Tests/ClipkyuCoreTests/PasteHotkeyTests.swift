@@ -50,51 +50,51 @@ final class PasteHotkeyTests: XCTestCase {
 
     func testKeyUpAdvancesWhenCommandWasReleasedFirst() {
         var tracker = PasteHotkeyTracker()
-        XCTAssertFalse(tracker.handle(.down(command: true)))
-        XCTAssertTrue(tracker.handle(.up(command: false)))
+        XCTAssertEqual(tracker.handle(.down(command: true)), .pressBegan)
+        XCTAssertEqual(tracker.handle(.up(command: false)), .pressEnded)
     }
 
     func testReleasingShiftBeforeVDoesNotLookLikePlainPaste() {
         var tracker = PasteHotkeyTracker()
-        XCTAssertFalse(tracker.handle(.down(command: true, shift: true)))
-        XCTAssertFalse(tracker.handle(.up(command: true, shift: false)))
+        XCTAssertEqual(tracker.handle(.down(command: true, shift: true)), .none)
+        XCTAssertEqual(tracker.handle(.up(command: true, shift: false)), .none)
     }
 
     func testOptionAndControlChordsAreNotArmed() {
         var tracker = PasteHotkeyTracker()
-        XCTAssertFalse(tracker.handle(.down(command: true, option: true)))
-        XCTAssertFalse(tracker.handle(.up(command: true)))
-        XCTAssertFalse(tracker.handle(.down(command: true, control: true)))
-        XCTAssertFalse(tracker.handle(.up(command: true, control: false)))
+        XCTAssertEqual(tracker.handle(.down(command: true, option: true)), .none)
+        XCTAssertEqual(tracker.handle(.up(command: true)), .none)
+        XCTAssertEqual(tracker.handle(.down(command: true, control: true)), .none)
+        XCTAssertEqual(tracker.handle(.up(command: true, control: false)), .none)
     }
 
     func testRepeatDoesNotAdvanceTwice() {
         var tracker = PasteHotkeyTracker()
-        XCTAssertFalse(tracker.handle(.down(command: true)))
-        XCTAssertFalse(tracker.handle(.down(command: true, isRepeat: true)))
-        XCTAssertTrue(tracker.handle(.up(command: true)))
-        XCTAssertFalse(tracker.handle(.up(command: true)))
+        XCTAssertEqual(tracker.handle(.down(command: true)), .pressBegan)
+        XCTAssertEqual(tracker.handle(.down(command: true, isRepeat: true)), .none)
+        XCTAssertEqual(tracker.handle(.up(command: true)), .pressEnded)
+        XCTAssertEqual(tracker.handle(.up(command: true)), .none)
     }
 
     func testPlainPressAdvancesOnceOnKeyUp() {
         var tracker = PasteHotkeyTracker()
-        XCTAssertFalse(tracker.handle(.down(command: true)))
-        XCTAssertTrue(tracker.handle(.up(command: true)))
-        XCTAssertFalse(tracker.handle(.up(command: false)))
+        XCTAssertEqual(tracker.handle(.down(command: true)), .pressBegan)
+        XCTAssertEqual(tracker.handle(.up(command: true)), .pressEnded)
+        XCTAssertEqual(tracker.handle(.up(command: false)), .none)
     }
 
     func testOtherKeysDoNotConsumeAnArmedPaste() {
         var tracker = PasteHotkeyTracker()
-        XCTAssertFalse(tracker.handle(.down(command: true)))
-        XCTAssertFalse(tracker.handle(KeyEvent(
+        XCTAssertEqual(tracker.handle(.down(command: true)), .pressBegan)
+        XCTAssertEqual(tracker.handle(KeyEvent(
             phase: .down,
             chord: KeyChord(charactersIgnoringModifiers: "c", command: true)
-        )))
-        XCTAssertFalse(tracker.handle(KeyEvent(
+        )), .none)
+        XCTAssertEqual(tracker.handle(KeyEvent(
             phase: .up,
             chord: KeyChord(charactersIgnoringModifiers: "c", command: true)
-        )))
-        XCTAssertTrue(tracker.handle(.up(command: false)))
+        )), .none)
+        XCTAssertEqual(tracker.handle(.up(command: false)), .pressEnded)
     }
 }
 

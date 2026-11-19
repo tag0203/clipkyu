@@ -101,13 +101,14 @@ public struct ClipboardStore: Equatable, Sendable {
         return IngestResult(skip: nil, historyInserted: historyInserted, enqueued: true, stage: stageItem)
     }
 
-    /// Removes the staged queue item after it was pasted and stages the next one.
+    /// Removes the queue item that was pasted and stages the next one.
+    /// `pastedID` is the item staged at key-down. When nil, the current stage is used.
     /// Returns the item to place on the pasteboard, or nil when the queue is exhausted
     /// (the clipboard should keep the text that was just pasted). History is not modified.
     @discardableResult
-    public mutating func advanceAfterPaste() -> ClipItem? {
+    public mutating func advanceAfterPaste(of pastedID: UUID? = nil) -> ClipItem? {
         guard mode == .fifo || mode == .filo else { return nil }
-        guard let current = stagedID else { return nil }
+        guard let current = pastedID ?? stagedID else { return nil }
         if let index = queue.firstIndex(where: { $0.id == current }) {
             queue.remove(at: index)
         }

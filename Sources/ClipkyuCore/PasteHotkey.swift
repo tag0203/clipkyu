@@ -57,23 +57,31 @@ public struct KeyEvent: Equatable, Sendable {
 /// Modifiers are read on key-down, which is when the destination app pastes.
 /// Releasing Command before V still advances. Releasing Shift, Option, or Control
 /// before V does not turn that press into a plain paste.
+public enum PasteKeyEffect: Equatable, Sendable {
+    case none
+    /// Plain ⌘V went down. Capture the pasteboard before any poll runs.
+    case pressBegan
+    /// The matching V key came up. Apply the capture from `pressBegan`.
+    case pressEnded
+}
+
 public struct PasteHotkeyTracker: Equatable, Sendable {
     private var armed = false
 
     public init() {}
 
-    /// True when this event is the key-up of a plain ⌘V press.
-    public mutating func handle(_ event: KeyEvent) -> Bool {
-        guard Self.isV(event.chord) else { return false }
+    /// `.pressBegan` on a plain ⌘V key-down, `.pressEnded` on its key-up.
+    public mutating func handle(_ event: KeyEvent) -> PasteKeyEffect {
+        guard Self.isV(event.chord) else { return .none }
         switch event.phase {
         case .down:
-            guard !event.chord.isRepeat else { return false }
+            guard !event.chord.isRepeat else { return .none }
             armed = PasteHotkey.isPlainCommandV(event.chord)
-            return false
+            return armed ? .pressBegan : .none
         case .up:
             let shouldAdvance = armed
             armed = false
-            return shouldAdvance
+            return shouldAdvance ? .pressEnded : .none
         }
     }
 

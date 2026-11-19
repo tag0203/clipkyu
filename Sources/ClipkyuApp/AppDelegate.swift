@@ -11,6 +11,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var status: StatusBarController?
     private var timer: Timer?
     private var oneShotOverride = false
+    /// Decision and staged id frozen on ⌘V key-down. Key-up applies this, not the pasteboard then.
+    private var pendingPaste: PastePressCapture?
     private var saveFailed = false
     private var startupNotice: String?
     private let version: String
@@ -70,7 +72,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.status = status
         status.refreshTitle()
 
-        hotkeys.onCommandV = { [weak self] in
+        hotkeys.onPlainCommandVDown = { [weak self] in
+            self?.captureCommandV()
+        }
+        hotkeys.onPlainCommandVUp = { [weak self] in
             self?.handleCommandV()
         }
         hotkeys.refresh()
@@ -106,16 +111,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         status?.refreshTitle()
     }
 
-    private func handleCommandV() {
-        let decision = QueuePastePolicy.decide(
+    private func captureCommandV() {
+        let staged = store.stagedItem()
+        pendingPaste = QueuePastePolicy.capture(
+            changeCount: pasteboard.changeCount,
             mode: store.mode,
-            hasStagedItem: store.stagedItem() != nil,
-            stagedText: store.stagedItem()?.text,
-            pastedText: pasteboard.currentString(),
+            stagedID: staged?.id,
+            stagedText: staged?.text,
+            pasteboardText: pasteboard.currentString(),
             oneShotOverride: oneShotOverride,
             hasUnobservedChange: pasteboard.hasUnobservedChange
         )
-        switch decision {
+    }
+
+    private func handleCommandV() {
+        let pending = pendingPaste
+        pendingPaste = nil
+        guard let pending else { return }
+        switch pending.decision {
         case .ingestFirst:
             oneShotOverride = false
             pollPasteboard()
@@ -127,7 +140,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             status?.refreshTitle()
         case .advance:
             oneShotOverride = false
-            _ = store.advanceAfterPaste()
+            _ = store.advanceAfterPaste(of: pending.stagedID)
             if let next = store.stagedItem() {
                 pasteboard.writeInternal(next.text)
             }

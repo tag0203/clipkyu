@@ -16,7 +16,8 @@ import ClipkyuCore
 final class HotkeyMonitor {
     private var monitor: Any?
     private var tracker = PasteHotkeyTracker()
-    var onCommandV: (() -> Void)?
+    var onPlainCommandVDown: (() -> Void)?
+    var onPlainCommandVUp: (() -> Void)?
 
     var isTrusted: Bool {
         AXIsProcessTrusted()
@@ -64,8 +65,14 @@ final class HotkeyMonitor {
                 return
             }
             let keyEvent = KeyEvent(phase: phase, chord: self.chord(from: event))
-            guard self.tracker.handle(keyEvent) else { return }
-            self.onCommandV?()
+            switch self.tracker.handle(keyEvent) {
+            case .pressBegan:
+                self.onPlainCommandVDown?()
+            case .pressEnded:
+                self.onPlainCommandVUp?()
+            case .none:
+                break
+            }
         }
     }
 

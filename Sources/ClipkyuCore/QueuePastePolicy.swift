@@ -38,4 +38,43 @@ public enum QueuePastePolicy {
         }
         return .advance
     }
+
+    /// Freezes the consume decision at key-down, when the other app reads the pasteboard.
+    /// A later poll may put the staged item back before key-up; that restore must not be
+    /// treated as the text that was pasted.
+    public static func capture(
+        changeCount: Int,
+        mode: ClipMode,
+        stagedID: UUID?,
+        stagedText: String?,
+        pasteboardText: String?,
+        oneShotOverride: Bool,
+        hasUnobservedChange: Bool
+    ) -> PastePressCapture {
+        PastePressCapture(
+            changeCount: changeCount,
+            decision: decide(
+                mode: mode,
+                hasStagedItem: stagedID != nil,
+                stagedText: stagedText,
+                pastedText: pasteboardText,
+                oneShotOverride: oneShotOverride,
+                hasUnobservedChange: hasUnobservedChange
+            ),
+            stagedID: stagedID
+        )
+    }
+}
+
+/// Clipboard and queue identity observed on the ⌘V key-down.
+public struct PastePressCapture: Equatable, Sendable {
+    public var changeCount: Int
+    public var decision: QueuePasteDecision
+    public var stagedID: UUID?
+
+    public init(changeCount: Int, decision: QueuePasteDecision, stagedID: UUID?) {
+        self.changeCount = changeCount
+        self.decision = decision
+        self.stagedID = stagedID
+    }
 }
