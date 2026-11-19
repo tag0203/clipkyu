@@ -62,7 +62,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         let title = Self.statusTitle(mode: snapshot.mode, queueCount: snapshot.queue.count)
         statusItem.button?.title = title
         statusItem.button?.toolTip = "Clipkyu \(title)"
-        statusItem.button?.accessibilityLabel = "Clipkyu \(title)"
+        statusItem.button?.setAccessibilityLabel("Clipkyu \(title)")
     }
 
     func menuWillOpen(_ menu: NSMenu) {
