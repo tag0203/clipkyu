@@ -105,7 +105,7 @@ swift test
 make check   # 通信コードが増えていないこと
 ```
 
-Linux ではコアのテストだけがパッケージに含まれます。アプリのビルドとテストの正は macOS です。GitHub Actions（`macos-15`）が `swift test` と `.app` の組み立てを、pull request と `main` への push で実行します。サードパーティ Action はコミット SHA で固定し、`permissions: contents: read` のみ、シークレットは使いません。
+Linux ではコアのテストだけがパッケージに含まれます。アプリのビルドとテストの正は macOS です。GitHub Actions（`macos-15-intel`）が `swift test` と `.app` の組み立てを、pull request と `main` への push で実行します。サードパーティ Action はコミット SHA で固定し、`permissions: contents: read` のみ、シークレットは使いません。
 
 このリポジトリの開発マシンが Linux の場合、macOS の ⌘V とメニューバーはそこでは実行できません。下の手順で実機確認してください。
 
