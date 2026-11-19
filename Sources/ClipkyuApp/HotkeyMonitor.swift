@@ -4,9 +4,10 @@ import ClipkyuCore
 
 /// Watches plain ⌘V in other apps.
 ///
-/// The destination app pastes on keyDown. By the time keyUp is delivered, that read
-/// has happened, so the queue advances synchronously here. Deferring to a later turn
-/// would race a second ⌘V and skip an item. A pasteboard-owner callback was rejected:
+/// The destination app pastes on keyDown. That press is classified with the modifiers
+/// held then. The queue advances synchronously on the matching keyUp, including when
+/// Command is released before V. Deferring to a later turn would race a second ⌘V
+/// and skip an item. A pasteboard-owner callback was rejected:
 /// opening the Edit menu and other clipboard reads would look like a paste and pop
 /// the queue. This monitor only sees the shortcut the user actually pressed.
 ///
@@ -14,6 +15,7 @@ import ClipkyuCore
 /// Events sent to this process are not included, which is what we want.
 final class HotkeyMonitor {
     private var monitor: Any?
+    private var tracker = PasteHotkeyTracker()
     var onCommandV: (() -> Void)?
 
     var isTrusted: Bool {
@@ -50,9 +52,19 @@ final class HotkeyMonitor {
 
     private func startIfNeeded() {
         guard monitor == nil, isTrusted else { return }
-        monitor = NSEvent.addGlobalMonitorForEvents(matching: .keyUp) { [weak self] event in
+        monitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
             guard let self else { return }
-            guard PasteHotkey.isPlainCommandV(self.chord(from: event)) else { return }
+            let phase: KeyPhase
+            switch event.type {
+            case .keyDown:
+                phase = .down
+            case .keyUp:
+                phase = .up
+            default:
+                return
+            }
+            let keyEvent = KeyEvent(phase: phase, chord: self.chord(from: event))
+            guard self.tracker.handle(keyEvent) else { return }
             self.onCommandV?()
         }
     }
@@ -61,6 +73,7 @@ final class HotkeyMonitor {
         guard let monitor else { return }
         NSEvent.removeMonitor(monitor)
         self.monitor = nil
+        tracker = PasteHotkeyTracker()
     }
 
     private func chord(from event: NSEvent) -> KeyChord {
