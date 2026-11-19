@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    name: Build and test
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Reject networking code
+        run: ./Scripts/check-no-network.sh
+
+      - name: Unit tests
+        run: swift test
+
+      - name: Package app
+        run: ./Scripts/package-app.sh
+
+      - name: Check bundle
+        run: |
+          set -euo pipefail
+          codesign --verify --verbose=2 dist/Clipkyu.app
+          plutil -lint dist/Clipkyu.app/Contents/Info.plist
+          lsui="$(/usr/libexec/PlistBuddy -c 'Print :LSUIElement' dist/Clipkyu.app/Contents/Info.plist)"
+          case "$lsui" in
+            true|TRUE|1|YES) ;;
+            *) echo "LSUIElement was '$lsui'"; exit 1 ;;
+          esac
+          bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' dist/Clipkyu.app/Contents/Info.plist)"
+          test "$bundle_id" = "app.clipkyu.Clipkyu"
+          if codesign -d --entitlements :- dist/Clipkyu.app 2>/dev/null | grep -q "com.apple.security.network"; then
+            echo "network entitlement is not allowed"
+            exit 1
+          fi
