@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>ja</string>
+	<key>CFBundleExecutable</key>
+	<string>Clipkyu</string>
+	<key>CFBundleIdentifier</key>
+	<string>app.clipkyu.Clipkyu</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Clipkyu</string>
+	<key>CFBundleDisplayName</key>
+	<string>Clipkyu</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>13.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSAccessibilityUsageDescription</key>
+	<string>FIFO/FILO の貼り付けキューを進めるため、ほかのアプリでの ⌘V を検知します。クリップボードの内容はこの Mac の中だけに保存します。</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2026 tag0203. MIT License.</string>
+</dict>
+</plist>
